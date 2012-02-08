@@ -3,6 +3,9 @@ package Geo::DNA;
 use common::sense;
 
 use Math::Trig qw( :pi rad2deg asin deg2rad );
+use POSIX "fmod";
+use Data::Dumper;
+
 use Exporter 'import';
 
 our @EXPORT_OK = qw(
@@ -125,6 +128,25 @@ sub decode {
     my ( $geodna, @opts ) = @_;
     my $options = { @opts };
 
+    my ( $lati, $loni ) = bounding_box( $geodna );
+
+    my $lat = ( $lati->[0] + $lati->[1] ) / 2;
+    my $lon = ( $loni->[0] + $loni->[0] ) / 2;
+    if ( $options->{radians} ) {
+        return ( deg2rad( $lat ), deg2rad( $lon ) );
+    }
+    return ( $lat, $lon );
+}
+
+sub size {
+    my ( $geo_dna ) = @_;
+    return 20000000.0 * ( 2 ^ ( ( length( $geo_dna ) * -1.0 ) - 1 ) )
+}
+
+# locates the min/max lat/lons around the geo_dna
+sub bounding_box {
+    my ( $geodna ) = @_;
+
     my @chars = split( //, $geodna );
 
     my $loni;
@@ -150,37 +172,20 @@ sub decode {
             $lati = [ $lati->[0],  ( $lati->[0] + $lati->[1] ) / 2 ];
         }
     }
-    my $lat = ( $lati->[0] + $lati->[1] ) / 2;
-    my $lon = ( $loni->[0] + $loni->[0] ) / 2;
-    if ( $options->{radians} ) {
-        return ( deg2rad( $lat ), deg2rad( $lon ) );
-    }
-    return ( $lat, $lon );
+    return ( $lati, $loni );
 }
 
-sub size {
-    my ( $geo_dna ) = @_;
-    return 20000000.0 * ( 2 ^ ( ( length( $geo_dna ) * -1.0 ) - 1 ) )
+sub add_vector {
+    my ( $lat, $lon, $dy, $dx ) = @_;
+
+    return (
+        fmod( ( $lat + 90.0 + $dy ), 180.0 ) - 90.0,
+        fmod( ( $lon + 180.0 + $dx ), 360.0 )  - 180.0
+    );
 }
 
-my $RADIALS = {
-    '0_N'  => 0,
-    '1_NE' => pip4,
-    '2_E'  => pip2,
-    '3_SE' => pip2 + pip4,
-    '4_S'  => pi,
-    '5_SW' => pi + pip4,
-    '6_W'  => pi + pip2,
-    '7_NW' => pi + pip2 + pip4,
-};
-
 # """
-# Return the eight neighboring geoprints and optionally their
-# compass bearing flag around the given geoprint.
-#
-# If bearing is True, bearing flag will be either None (not
-# adjacent) or one of ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
-# """
+# Return the eight neighboring geodna codes
 
 sub neighbours_geo_dna {
     my ( @args ) = @_;
@@ -188,65 +193,25 @@ sub neighbours_geo_dna {
 }
 
 sub neighbours {
-    my ( $geo_dna, @opts ) = @_;
-    my $options = { @opts };
+    my ( $geodna ) = @_;
 
-    my $results = [];
-    my $precision = length( $geo_dna );
-    my ( $lat1, $lon1 ) = decode( $geo_dna, radians => 1 );
-    #print STDERR " $lat1 / $lon1 \n";
-    my $d = size( $geo_dna ) / $RADIUS_OF_EARTH;
-    foreach my $b ( sort keys %$RADIALS ) {
-        my $r = $RADIALS->{$b};
-        my $lat = asin(sin($lat1) * cos($d) +
-                       cos($lat1) * sin($d) * cos($r));
-        my $dlon = atan2(sin($r) * sin($d) * cos($lat1),
-                         cos($d) - sin($lat1) * sin($lat));
-        my $lon = ( $lon1 + $dlon ) % pi2 - pi;
-        my $h = encode( $lat, $lon, precision => $precision, radians => 1 );
-        if ( $options->{bearing} ) {
-            push @$results, [ $b, $h ];
-        } else {
-            push @$results, $h;
+    # TODO:kd - this can be optimised
+    my ( $lat, $lon )   = decode( $geodna );
+    my ( $lati, $loni ) = bounding_box( $geodna );
+    my $width  = abs( $loni->[1] - $loni->[0] );
+    my $height = abs( $lati->[1] - $lati->[0] );
+
+    my $neighbours = [];
+    foreach my $y ( -1, 0, 1 ) {
+        foreach my $x ( -1, 0, 1 ) {
+            next unless ( $x || $y );
+            push (@$neighbours, encode( add_vector( $lat, $lon, $height * $y, $width * $x ) ) );
         }
     }
-    return $results;
+    return $neighbours;
 }
 
 my $PYTHON = <<PYTHON
-
-def neighbors(geoprint, bearing=True):
-
-    results = set()
-    precision = len(geoprint)
-    lat1, lon1 = decode(geoprint, radians=True)
-    d = size(geoprint) / 6378100 # radius of earth in meters
-    for b, r in _radials.iteritems():
-        lat = asin(sin(lat1) * cos(d) +
-                   cos(lat1) * sin(d) * cos(r))
-        dlon = atan2(sin(r) * sin(d) * cos(lat1),
-                     cos(d) - sin(lat1) * sin(lat))
-        lon = mod(lon1 + dlon + pi, 2 * pi) - pi
-        h = encode(lat, lon, precision=precision, radians=True)
-        if bearing:
-            h = (b, h)
-        results.add(h)
-    return results
-
-
-def adjacent(first, second):
-    """
-    Return a flag indicating if two geoprints are adjacent to each
-    other.
-    """
-    if min(len(first), len(second)) < 3:
-        raise TypeError(
-            "Adjacency requires at least 3 characters of precision.")
-    maxe = (error(first, True) / 2) + (error(second, True) / 2)
-    maxe2 = pow(maxe, 2)
-    h = sqrt(maxe2 + maxe2)
-    d = distance(first, second, True)
-    return h <= d
 
 PYTHON
 ;
