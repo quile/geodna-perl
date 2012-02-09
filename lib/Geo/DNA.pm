@@ -4,7 +4,6 @@ use common::sense;
 
 use Math::Trig qw( :pi rad2deg asin deg2rad );
 use POSIX "fmod";
-use Data::Dumper;
 
 use Exporter 'import';
 
@@ -14,24 +13,7 @@ our @EXPORT_OK = qw(
     neighbours_geo_dna
 );
 
-our $VERSION = "1.0";
-
-# """Encode the given latitude and longitude into a geoprint that
-# contains 'precision' characters.
-#
-# If radians is True, input parameters are in radians, otherwise
-# they are degrees.  Example::
-#
-# >>> c = (7.0625, -95.677068)
-# >>> h = encode(*c)
-# >>> h
-# 'watttatcttttgctacgaagt'
-#
-# >>> r = rads(c[0]), rads(c[1])
-# >>> h2 = encode(*r, radians=True)
-# >>> h == h2
-# True
-# """
+our $VERSION = "0.1";
 
 my $RADIUS_OF_EARTH = 6378100;
 my $ALPHABET = [ "g", "a", "t", "c", ];
@@ -95,30 +77,6 @@ sub encode {
     return $geodna;
 }
 
-
-# """Decode a geoprint, returning the latitude and longitude.  These
-# coordinates should approximate the input coordinates within a
-# degree of error returned by 'error()'
-#
-# >>> c = (7.0625, -95.677068)
-# >>> h = encode(*c)
-# >>> c2 = decode(h)
-# >>> e = error(h)
-# >>> abs(c[0] - c2[0]) <= e
-# True
-# >>> abs(c[1] - c2[1]) <= e
-# True
-#
-# If radians is True, results are in radians instead of degrees.
-#
-# >>> c2 = decode(h, radians=True)
-# >>> e = error(h, radians=True)
-# >>> abs(rads(c[0]) - c2[0]) <= e
-# True
-# >>> abs(rads(c[1]) - c2[1]) <= e
-# True
-# """
-
 sub decode_geo_dna {
     my ( @args ) = @_;
     decode( @args );
@@ -136,11 +94,6 @@ sub decode {
         return ( deg2rad( $lat ), deg2rad( $lon ) );
     }
     return ( $lat, $lon );
-}
-
-sub size {
-    my ( $geo_dna ) = @_;
-    return 20000000.0 * ( 2 ^ ( ( length( $geo_dna ) * -1.0 ) - 1 ) )
 }
 
 # locates the min/max lat/lons around the geo_dna
@@ -211,9 +164,175 @@ sub neighbours {
     return $neighbours;
 }
 
-my $PYTHON = <<PYTHON
+=head1 NAME
 
-PYTHON
-;
+Geo::DNA - Encode latitude and longitude in a useful string format
+
+=head1 SYNOPSIS
+
+ use Geo::DNA qw( encode_geo_dna decode_geo_dna );
+
+ my $geo = encode_geo_dna( -41.288889, 174.777222, precision => 22 );
+ print "$geo\n"
+ etctttagatagtgacagtcta
+
+ my ( $lat, $lon ) = decode_geo_dna( $geo );
+ print "$lat | $lon\n";
+ -41.288889 | 174.777222
+
+=head1 VERSION
+
+    0.01
+
+
+=head1 FEATURES
+
+=over
+
+=item * Simple API
+
+Generally you just convert coordinates back and forth
+with simple function calls.
+
+=item * Fast
+
+It's just basic space partitioning, really.
+
+
+
+=back
+
+=head1 DESCRIPTION
+
+This is a Perl version of the Python "geoprint" system that we developed
+a few years back at Action Without Borders.
+
+Its purpose is to encode a latitude/longitude pair in a string format that
+can be used in text databases to locate items by proximity.  For example,
+if Wellington, New Zealand has the Geo::DNA(10) value of
+
+etctttagat
+
+(which it does), then you can chop characters off the end of that to expand
+the area around Wellington.  You can easily tell if items are close
+together because (for the most part) their Geo::DNA will have the same
+prefix.  For example, Palmerston North, New Zealand, has a Geo::DNA(10) code of
+
+etctttaatc
+
+which has the same initial 7 characters.
+
+The original implementation of this in Python was by Michel Pelletier.
+
+
+=head2 FUNCTIONS
+
+=head3 encode_geo_dna
+
+ my $code = encode_geo_dna( latitude, longitude, options);
+
+Returns a Geo::DNA code (which is a string) for latitude, longitude.
+Possible options are:
+
+=over
+
+=item radians => true/false
+
+A true value means the latitude and longitude are in radians.
+
+=item precision => Integer (defaults to 22)
+
+number of characters in the Geo::DNA code.
+Note that any more than 22 chars and you're kinda splitting hairs.
+
+=back
+
+=head3 decode_geo_dna
+
+ my ( $lat, $lon ) = decode_geo_dna( code, options )
+
+Returns the latitude and longitude encoded within a Geo::DNA code.
+
+=over
+
+=item radians => true/false
+
+If true, the values returned will be in radians.
+
+=back
+
+
+=head3 neighbours_geo_dna
+
+ my $neighbours = neighbours_geo_dna( $code );
+
+Returns an arrayref of the 8 Geo::DNA codes representing boxes of
+equal size around the one represented by $code.  This is very useful
+for proximity searching, because you can generate these Geo::DNA codes,
+and then using only textual searching (eg. a SQL "LIKE" operator), you
+can locate any items within any of those boxes.
+
+The precision (ie. string length) of the Geo::DNA codes will be the same
+as $code.
+
+
+=head3 bounding_box
+
+ my ( $lats, $lons ) = Geo::DNA::bounding_box( $code );
+
+This returns an arrayref containing two arrayrefs:
+
+ [ [ minimum latitude,  maximum latitude  ],
+   [ minimum longitude, maximum longitude ],
+ ]
+
+
+=head1 TODO
+
+=over
+
+=item * Add conveniences to help you with prefix-based searching
+
+At present you have to understand how this geometry works fairly well in
+order to get the most out of this module.
+
+=item * Bulletproofing
+
+It's not particularly well-tested.  And there is the boundary-problem in that
+two very close-by locations can have radically different Geo::DNA codes if
+they are on different sides of a partition.  This is not a problem if you
+use the neighbouring Geo::DNA codes of your reference point to do proximity
+searching, but if you don't know how to do that, it will make life hard
+for you.
+
+=back
+
+
+=head1 BUGS
+
+Please report bugs relevant to C<GeoDNA> to E<lt>info[at]kyledawkins.comE<gt>.
+
+=head1 CONTRIBUTING
+
+The github repository is at https://quile@github.com/quile/geodna-perl.git
+
+
+=head1 SEE ALSO
+
+Some other stuff.
+
+=head1 AUTHOR
+
+Kyle Dawkins, E<lt>info[at]kyledawkins.comE<gt>
+
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2012 by Kyle Dawkins
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
 
 1;

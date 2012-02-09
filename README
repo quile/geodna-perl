@@ -1,0 +1,134 @@
+.::Geo::DNA(3)        User Contributed Perl Documentation       .::Geo::DNA(3)
+
+
+
+NNAAMMEE
+       Geo::DNA − Encode latitude and longitude in a useful string format
+
+SSYYNNOOPPSSIISS
+        use Geo::DNA qw( encode_geo_dna decode_geo_dna );
+
+        my $geo = encode_geo_dna( ‐41.288889, 174.777222, precision => 22 );
+        print "$geo\n"
+        etctttagatagtgacagtcta
+
+        my ( $lat, $lon ) = decode_geo_dna( $geo );
+        print "$lat ⎪ $lon\n";
+        ‐41.288889 ⎪ 174.777222
+
+VVEERRSSIIOONN
+           0.01
+
+FFEEAATTUURREESS
+       * Simple API
+           Generally you just convert coordinates back and forth with simple
+           function calls.
+
+       * Fast
+           It’s just basic space partitioning, really.
+
+DDEESSCCRRIIPPTTIIOONN
+       This is a Perl version of the Python "geoprint" system that we devel‐
+       oped a few years back at Action Without Borders.
+
+       Its purpose is to encode a latitude/longitude pair in a string format
+       that can be used in text databases to locate items by proximity.  For
+       example, if Wellington, New Zealand has the Geo::DNA(10) value of
+
+       etctttagat
+
+       (which it does), then you can chop characters off the end of that to
+       expand the area around Wellington.  You can easily tell if items are
+       close together because (for the most part) their Geo::DNA will have the
+       same prefix.  For example, Palmerston North, New Zealand, has a
+       Geo::DNA(10) code of
+
+       etctttaatc
+
+       which has the same initial 7 characters.
+
+       The original implementation of this in Python was by Michel Pelletier.
+
+       FFUUNNCCTTIIOONNSS
+
+       _e_n_c_o_d_e___g_e_o___d_n_a
+
+        my $code = encode_geo_dna( latitude, longitude, options);
+
+       Returns a Geo::DNA code (which is a string) for latitude, longitude.
+       Possible options are:
+
+       radians => true/false
+           A true value means the latitude and longitude are in radians.
+
+       precision => Integer (defaults to 22)
+           number of characters in the Geo::DNA code.  Note that any more than
+           22 chars and you’re kinda splitting hairs.
+
+       _d_e_c_o_d_e___g_e_o___d_n_a
+
+        my ( $lat, $lon ) = decode_geo_dna( code, options )
+
+       Returns the latitude and longitude encoded within a Geo::DNA code.
+
+       radians => true/false
+           If true, the values returned will be in radians.
+
+       _n_e_i_g_h_b_o_u_r_s___g_e_o___d_n_a
+
+        my $neighbours = neighbours_geo_dna( $code );
+
+       Returns an arrayref of the 8 Geo::DNA codes representing boxes of equal
+       size around the one represented by $code.  This is very useful for
+       proximity searching, because you can generate these Geo::DNA codes, and
+       then using only textual searching (eg. a SQL "LIKE" operator), you can
+       locate any items within any of those boxes.
+
+       The precision (ie. string length) of the Geo::DNA codes will be the
+       same as $code.
+
+       _b_o_u_n_d_i_n_g___b_o_x
+
+        my ( $lats, $lons ) = Geo::DNA::bounding_box( $code );
+
+       This returns an arrayref containing two arrayrefs:
+
+        [ [ minimum latitude,  maximum latitude  ],
+          [ minimum longitude, maximum longitude ],
+        ]
+
+TTOODDOO
+       * Add conveniences to help you with prefix‐based searching
+           At present you have to understand how this geometry works fairly
+           well in order to get the most out of this module.
+
+       * Bulletproofing
+           It’s not particularly well−tested.  And there is the boundary‐prob‐
+           lem in that two very close‐by locations can have radically differ‐
+           ent Geo::DNA codes if they are on different sides of a partition.
+           This is not a problem if you use the neighbouring Geo::DNA codes of
+           your reference point to do proximity searching, but if you don’t
+           know how to do that, it will make life hard for you.
+
+BBUUGGSS
+       Please report bugs relevant to "GeoDNA" to <info[at]kyledawkins.com>.
+
+CCOONNTTRRIIBBUUTTIINNGG
+       The github repository is at
+       https://quile@github.com/quile/geodna−perl.git
+
+SSEEEE AALLSSOO
+       Some other stuff.
+
+AAUUTTHHOORR
+       Kyle Dawkins, <info[at]kyledawkins.com>
+
+CCOOPPYYRRIIGGHHTT AANNDD LLIICCEENNSSEE
+       Copyright 2012 by Kyle Dawkins
+
+       This library is free software; you can redistribute it and/or modify it
+       under the same terms as Perl itself.
+
+
+
+perl v5.8.9                       2012‐02‐09                    .::Geo::DNA(3)
