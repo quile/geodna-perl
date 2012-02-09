@@ -1,134 +1,213 @@
-.::Geo::DNA(3)        User Contributed Perl Documentation       .::Geo::DNA(3)
+<?xml version="1.0" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Geo::DNA - Encode latitude and longitude in a useful string format</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link rev="made" href="mailto:kdawkins@sugalumps.local" />
+</head>
+
+<body style="background-color: white">
 
 
+<!-- INDEX BEGIN -->
+<div name="index">
+<p><a name="__index__"></a></p>
 
-NNAAMMEE
-       Geo::DNA − Encode latitude and longitude in a useful string format
+<ul>
 
-SSYYNNOOPPSSIISS
-        use Geo::DNA qw( encode_geo_dna decode_geo_dna );
+	<li><a href="#name">NAME</a></li>
+	<li><a href="#synopsis">SYNOPSIS</a></li>
+	<li><a href="#version">VERSION</a></li>
+	<li><a href="#features">FEATURES</a></li>
+	<li><a href="#description">DESCRIPTION</a></li>
+	<ul>
 
-        my $geo = encode_geo_dna( ‐41.288889, 174.777222, precision => 22 );
-        print "$geo\n"
-        etctttagatagtgacagtcta
+		<li><a href="#functions">FUNCTIONS</a></li>
+		<ul>
 
-        my ( $lat, $lon ) = decode_geo_dna( $geo );
-        print "$lat ⎪ $lon\n";
-        ‐41.288889 ⎪ 174.777222
+			<li><a href="#encode_geo_dna">encode_geo_dna</a></li>
+			<li><a href="#decode_geo_dna">decode_geo_dna</a></li>
+			<li><a href="#neighbours_geo_dna">neighbours_geo_dna</a></li>
+			<li><a href="#bounding_box">bounding_box</a></li>
+		</ul>
 
-VVEERRSSIIOONN
-           0.01
+	</ul>
 
-FFEEAATTUURREESS
-       * Simple API
-           Generally you just convert coordinates back and forth with simple
-           function calls.
+	<li><a href="#todo">TODO</a></li>
+	<li><a href="#bugs">BUGS</a></li>
+	<li><a href="#contributing">CONTRIBUTING</a></li>
+	<li><a href="#see_also">SEE ALSO</a></li>
+	<li><a href="#author">AUTHOR</a></li>
+	<li><a href="#copyright_and_license">COPYRIGHT AND LICENSE</a></li>
+</ul>
 
-       * Fast
-           It’s just basic space partitioning, really.
+<hr name="index" />
+</div>
+<!-- INDEX END -->
 
-DDEESSCCRRIIPPTTIIOONN
-       This is a Perl version of the Python "geoprint" system that we devel‐
-       oped a few years back at Action Without Borders.
+<p>
+</p>
+<h1><a name="name">NAME</a></h1>
+<p>Geo::DNA - Encode latitude and longitude in a useful string format</p>
+<p>
+</p>
+<hr />
+<h1><a name="synopsis">SYNOPSIS</a></h1>
+<pre>
+ use Geo::DNA qw( encode_geo_dna decode_geo_dna );</pre>
+<pre>
+ my $geo = encode_geo_dna( -41.288889, 174.777222, precision =&gt; 22 );
+ print &quot;$geo\n&quot;
+ etctttagatagtgacagtcta</pre>
+<pre>
+ my ( $lat, $lon ) = decode_geo_dna( $geo );
+ print &quot;$lat | $lon\n&quot;;
+ -41.288889 | 174.777222</pre>
+<p>
+</p>
+<hr />
+<h1><a name="version">VERSION</a></h1>
+<pre>
+    0.01</pre>
+<p>
+</p>
+<hr />
+<h1><a name="features">FEATURES</a></h1>
+<ul>
+<li><strong><a name="simple_api" class="item">Simple API</a></strong>
 
-       Its purpose is to encode a latitude/longitude pair in a string format
-       that can be used in text databases to locate items by proximity.  For
-       example, if Wellington, New Zealand has the Geo::DNA(10) value of
+<p>Generally you just convert coordinates back and forth
+with simple function calls.</p>
+</li>
+<li><strong><a name="fast" class="item">Fast</a></strong>
 
-       etctttagat
+<p>It's just basic space partitioning, really.</p>
+</li>
+</ul>
+<p>
+</p>
+<hr />
+<h1><a name="description">DESCRIPTION</a></h1>
+<p>This is a Perl version of the Python &quot;geoprint&quot; system that we developed
+a few years back at Action Without Borders.</p>
+<p>Its purpose is to encode a latitude/longitude pair in a string format that
+can be used in text databases to locate items by proximity.  For example,
+if Wellington, New Zealand has the Geo::DNA(10) value of</p>
+<p>etctttagat</p>
+<p>(which it does), then you can chop characters off the end of that to expand
+the area around Wellington.  You can easily tell if items are close
+together because (for the most part) their Geo::DNA will have the same
+prefix.  For example, Palmerston North, New Zealand, has a Geo::DNA(10) code of</p>
+<p>etctttaatc</p>
+<p>which has the same initial 7 characters.</p>
+<p>The original implementation of this in Python was by Michel Pelletier.</p>
+<p>
+</p>
+<h2><a name="functions">FUNCTIONS</a></h2>
+<p>
+</p>
+<h3><a name="encode_geo_dna">encode_geo_dna</a></h3>
+<pre>
+ my $code = encode_geo_dna( latitude, longitude, options);</pre>
+<p>Returns a Geo::DNA code (which is a string) for latitude, longitude.
+Possible options are:</p>
+<dl>
+<dt><strong><a name="radians_true_false" class="item">radians =&gt; true/false</a></strong></dt>
 
-       (which it does), then you can chop characters off the end of that to
-       expand the area around Wellington.  You can easily tell if items are
-       close together because (for the most part) their Geo::DNA will have the
-       same prefix.  For example, Palmerston North, New Zealand, has a
-       Geo::DNA(10) code of
+<dd>
+<p>A true value means the latitude and longitude are in radians.</p>
+</dd>
+<dt><strong><a name="integer" class="item">precision =&gt; Integer (defaults to 22)</a></strong></dt>
 
-       etctttaatc
+<dd>
+<p>number of characters in the Geo::DNA code.
+Note that any more than 22 chars and you're kinda splitting hairs.</p>
+</dd>
+</dl>
+<p>
+</p>
+<h3><a name="decode_geo_dna">decode_geo_dna</a></h3>
+<pre>
+ my ( $lat, $lon ) = decode_geo_dna( code, options )</pre>
+<p>Returns the latitude and longitude encoded within a Geo::DNA code.</p>
+<dl>
+<dt><strong><a name="radians_true_false2" class="item">radians =&gt; true/false</a></strong></dt>
 
-       which has the same initial 7 characters.
+<dd>
+<p>If true, the values returned will be in radians.</p>
+</dd>
+</dl>
+<p>
+</p>
+<h3><a name="neighbours_geo_dna">neighbours_geo_dna</a></h3>
+<pre>
+ my $neighbours = neighbours_geo_dna( $code );</pre>
+<p>Returns an arrayref of the 8 Geo::DNA codes representing boxes of
+equal size around the one represented by $code.  This is very useful
+for proximity searching, because you can generate these Geo::DNA codes,
+and then using only textual searching (eg. a SQL &quot;LIKE&quot; operator), you
+can locate any items within any of those boxes.</p>
+<p>The precision (ie. string length) of the Geo::DNA codes will be the same
+as $code.</p>
+<p>
+</p>
+<h3><a name="bounding_box">bounding_box</a></h3>
+<pre>
+ my ( $lats, $lons ) = Geo::DNA::bounding_box( $code );</pre>
+<p>This returns an arrayref containing two arrayrefs:</p>
+<pre>
+ [ [ minimum latitude,  maximum latitude  ],
+   [ minimum longitude, maximum longitude ],
+ ]</pre>
+<p>
+</p>
+<hr />
+<h1><a name="todo">TODO</a></h1>
+<ul>
+<li><strong><a name="add_conveniences_to_help_you_with_prefix_based_searching" class="item">Add conveniences to help you with prefix-based searching</a></strong>
 
-       The original implementation of this in Python was by Michel Pelletier.
+<p>At present you have to understand how this geometry works fairly well in
+order to get the most out of this module.</p>
+</li>
+<li><strong><a name="bulletproofing" class="item">Bulletproofing</a></strong>
 
-       FFUUNNCCTTIIOONNSS
+<p>It's not particularly well-tested.  And there is the boundary-problem in that
+two very close-by locations can have radically different Geo::DNA codes if
+they are on different sides of a partition.  This is not a problem if you
+use the neighbouring Geo::DNA codes of your reference point to do proximity
+searching, but if you don't know how to do that, it will make life hard
+for you.</p>
+</li>
+</ul>
+<p>
+</p>
+<hr />
+<h1><a name="bugs">BUGS</a></h1>
+<p>Please report bugs relevant to <code>GeoDNA</code> to &lt;info[at]kyledawkins.com&gt;.</p>
+<p>
+</p>
+<hr />
+<h1><a name="contributing">CONTRIBUTING</a></h1>
+<p>The github repository is at <a href="https://quile@github.com/quile/geodna-perl.git">https://quile@github.com/quile/geodna-perl.git</a></p>
+<p>
+</p>
+<hr />
+<h1><a name="see_also">SEE ALSO</a></h1>
+<p>Some other stuff.</p>
+<p>
+</p>
+<hr />
+<h1><a name="author">AUTHOR</a></h1>
+<p>Kyle Dawkins, &lt;info[at]kyledawkins.com&gt;</p>
+<p>
+</p>
+<hr />
+<h1><a name="copyright_and_license">COPYRIGHT AND LICENSE</a></h1>
+<p>Copyright 2012 by Kyle Dawkins</p>
+<p>This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.</p>
 
-       _e_n_c_o_d_e___g_e_o___d_n_a
+</body>
 
-        my $code = encode_geo_dna( latitude, longitude, options);
-
-       Returns a Geo::DNA code (which is a string) for latitude, longitude.
-       Possible options are:
-
-       radians => true/false
-           A true value means the latitude and longitude are in radians.
-
-       precision => Integer (defaults to 22)
-           number of characters in the Geo::DNA code.  Note that any more than
-           22 chars and you’re kinda splitting hairs.
-
-       _d_e_c_o_d_e___g_e_o___d_n_a
-
-        my ( $lat, $lon ) = decode_geo_dna( code, options )
-
-       Returns the latitude and longitude encoded within a Geo::DNA code.
-
-       radians => true/false
-           If true, the values returned will be in radians.
-
-       _n_e_i_g_h_b_o_u_r_s___g_e_o___d_n_a
-
-        my $neighbours = neighbours_geo_dna( $code );
-
-       Returns an arrayref of the 8 Geo::DNA codes representing boxes of equal
-       size around the one represented by $code.  This is very useful for
-       proximity searching, because you can generate these Geo::DNA codes, and
-       then using only textual searching (eg. a SQL "LIKE" operator), you can
-       locate any items within any of those boxes.
-
-       The precision (ie. string length) of the Geo::DNA codes will be the
-       same as $code.
-
-       _b_o_u_n_d_i_n_g___b_o_x
-
-        my ( $lats, $lons ) = Geo::DNA::bounding_box( $code );
-
-       This returns an arrayref containing two arrayrefs:
-
-        [ [ minimum latitude,  maximum latitude  ],
-          [ minimum longitude, maximum longitude ],
-        ]
-
-TTOODDOO
-       * Add conveniences to help you with prefix‐based searching
-           At present you have to understand how this geometry works fairly
-           well in order to get the most out of this module.
-
-       * Bulletproofing
-           It’s not particularly well−tested.  And there is the boundary‐prob‐
-           lem in that two very close‐by locations can have radically differ‐
-           ent Geo::DNA codes if they are on different sides of a partition.
-           This is not a problem if you use the neighbouring Geo::DNA codes of
-           your reference point to do proximity searching, but if you don’t
-           know how to do that, it will make life hard for you.
-
-BBUUGGSS
-       Please report bugs relevant to "GeoDNA" to <info[at]kyledawkins.com>.
-
-CCOONNTTRRIIBBUUTTIINNGG
-       The github repository is at
-       https://quile@github.com/quile/geodna−perl.git
-
-SSEEEE AALLSSOO
-       Some other stuff.
-
-AAUUTTHHOORR
-       Kyle Dawkins, <info[at]kyledawkins.com>
-
-CCOOPPYYRRIIGGHHTT AANNDD LLIICCEENNSSEE
-       Copyright 2012 by Kyle Dawkins
-
-       This library is free software; you can redistribute it and/or modify it
-       under the same terms as Perl itself.
-
-
-
-perl v5.8.9                       2012‐02‐09                    .::Geo::DNA(3)
+</html>
