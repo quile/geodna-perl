@@ -1,5 +1,7 @@
 package Geo::DNA;
 
+our $VERSION = "0.2";
+
 use common::sense;
 
 use Math::Trig qw( :pi rad2deg asin deg2rad );
@@ -13,7 +15,6 @@ our @EXPORT_OK = qw(
     neighbours_geo_dna
 );
 
-our $VERSION = "0.1";
 
 my $RADIUS_OF_EARTH = 6378100;
 my $ALPHABET = [ "g", "a", "t", "c", ];
@@ -182,7 +183,7 @@ Geo::DNA - Encode latitude and longitude in a useful string format
 
 =head1 VERSION
 
-    0.01
+    0.02
 
 
 =head1 FEATURES
