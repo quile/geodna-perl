@@ -224,6 +224,11 @@ which has the same initial 7 characters.
 
 The original implementation of this in Python was by Michel Pelletier.
 
+This uses a concept that is very similar to Gustavo Niemeyer's geohash
+system ( http://geohash.org ), but encodes the latitude and longitude in a
+way that is more conducive to stem-based searching (which is probably
+the a common use of these hashing systems).
+
 
 =head2 FUNCTIONS
 

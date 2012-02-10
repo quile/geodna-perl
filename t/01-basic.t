@@ -30,7 +30,7 @@ ok( $geo eq 'etcttgctagcttagt', "Nelson's DNA is correct" );
 ok( value_is_near( $lat, -41.283333, 0.5 ), "Latitude converted back correctly." );
 ok( value_is_near( $lon, 173.283333, 0.5 ), "Longitude converted back correctly." );
 
-my $geo = encode_geo_dna( 7.0625, -95.677068 );
+$geo = encode_geo_dna( 7.0625, -95.677068 );
 ok( $geo eq 'watttatcttttgctacgaagt', "Encoded successfully" );
 
 my ( $new_lat, $new_lon ) = Geo::DNA::add_vector( -41.288889, 174.777222, 10.0, 10.0 );
