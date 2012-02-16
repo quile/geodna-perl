@@ -51,7 +51,8 @@ DESCRIPTION
     the a common use of these hashing systems).
 
   FUNCTIONS
-   encode_geo_dna
+
+    `encode_geo_dna'
      my $code = encode_geo_dna( latitude, longitude, options);
 
     Returns a Geo::DNA code (which is a string) for latitude, longitude.
@@ -64,7 +65,7 @@ DESCRIPTION
         number of characters in the Geo::DNA code. Note that any more than
         22 chars and you're kinda splitting hairs.
 
-   decode_geo_dna
+    `decode_geo_dna'
      my ( $lat, $lon ) = decode_geo_dna( code, options )
 
     Returns the latitude and longitude encoded within a Geo::DNA code.
@@ -72,7 +73,7 @@ DESCRIPTION
     radians => true/false
         If true, the values returned will be in radians.
 
-   neighbours_geo_dna
+    `neighbours_geo_dna'
      my $neighbours = neighbours_geo_dna( $code );
 
     Returns an arrayref of the 8 Geo::DNA codes representing boxes of equal
@@ -84,8 +85,8 @@ DESCRIPTION
     The precision (ie. string length) of the Geo::DNA codes will be the same
     as $code.
 
-   bounding_box
-     my ( $lats, $lons ) = Geo::DNA::bounding_box( $code );
+    `bounding_box_geo_dna'
+     my ( $lats, $lons ) = Geo::DNA::bounding_box_geo_dna( $code );
 
     This returns an arrayref containing two arrayrefs:
 
@@ -107,7 +108,7 @@ TODO
         to do that, it will make life hard for you.
 
 BUGS
-    Please report bugs relevant to "GeoDNA" to <info[at]kyledawkins.com>.
+    Please report bugs relevant to `GeoDNA' to <info[at]kyledawkins.com>.
 
 CONTRIBUTING
     The github repository is at

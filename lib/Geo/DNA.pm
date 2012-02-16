@@ -1,6 +1,6 @@
 package Geo::DNA;
 
-our $VERSION = "0.2";
+our $VERSION = "0.3";
 
 use common::sense;
 
@@ -13,6 +13,7 @@ our @EXPORT_OK = qw(
     encode_geo_dna
     decode_geo_dna
     neighbours_geo_dna
+    bounding_box_geo_dna
 );
 
 
@@ -97,6 +98,10 @@ sub decode {
     return ( $lat, $lon );
 }
 
+sub bounding_box_geo_dna {
+    return bounding_box( @_ );
+}
+
 # locates the min/max lat/lons around the geo_dna
 sub bounding_box {
     my ( $geodna ) = @_;
@@ -165,6 +170,7 @@ sub neighbours {
     return $neighbours;
 }
 
+
 =head1 NAME
 
 Geo::DNA - Encode latitude and longitude in a useful string format
@@ -183,7 +189,7 @@ Geo::DNA - Encode latitude and longitude in a useful string format
 
 =head1 VERSION
 
-    0.02
+    0.03
 
 
 =head1 FEATURES
@@ -233,7 +239,7 @@ the a common use of these hashing systems).
 
 =head2 FUNCTIONS
 
-=head3 encode_geo_dna
+=head3 C<encode_geo_dna>
 
  my $code = encode_geo_dna( latitude, longitude, options);
 
@@ -253,7 +259,7 @@ Note that any more than 22 chars and you're kinda splitting hairs.
 
 =back
 
-=head3 decode_geo_dna
+=head3 C<decode_geo_dna>
 
  my ( $lat, $lon ) = decode_geo_dna( code, options )
 
@@ -268,7 +274,7 @@ If true, the values returned will be in radians.
 =back
 
 
-=head3 neighbours_geo_dna
+=head3 C<neighbours_geo_dna>
 
  my $neighbours = neighbours_geo_dna( $code );
 
@@ -282,9 +288,9 @@ The precision (ie. string length) of the Geo::DNA codes will be the same
 as $code.
 
 
-=head3 bounding_box
+=head3 C<bounding_box_geo_dna>
 
- my ( $lats, $lons ) = Geo::DNA::bounding_box( $code );
+ my ( $lats, $lons ) = Geo::DNA::bounding_box_geo_dna( $code );
 
 This returns an arrayref containing two arrayrefs:
 

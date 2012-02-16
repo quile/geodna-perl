@@ -1,5 +1,4 @@
-use Test::More tests => 11;
-use Data::Dumper;
+use Test::More tests => 12;
 
 BEGIN { use_ok( 'Geo::DNA' ) }
 
@@ -13,6 +12,7 @@ use Geo::DNA qw(
     encode_geo_dna
     decode_geo_dna
     neighbours_geo_dna
+    bounding_box_geo_dna
 );
 
 my $geo = encode_geo_dna( -41.288889, 174.777222, precision => 22 );
@@ -39,3 +39,10 @@ ok( value_is_near( $new_lon, -175.222777 ), "New longitude is good" );
 
 my $neighbours = neighbours_geo_dna( 'etctttagatag' );
 ok( $neighbours && scalar @$neighbours == 8, "Got back correct neighbours" );
+
+my ( $lati, $loni ) = bounding_box_geo_dna( 'etctttagatag' );
+
+is_deeply( [ $lati, $loni ], 
+           [ [ '-41.30859375', '-41.220703125' ],
+             [ '174.7265625', '174.814453125' ]
+           ], "Bounding box" );
