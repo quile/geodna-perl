@@ -37,6 +37,9 @@ It's just basic space partitioning, really.
 
 # DESCRIPTION
 
+NEW: see an interactive demo of Geo::DNA codes at
+http://www.shoffle.com/geodna-js/docs/google-maps.html
+
 This is a Perl version of the Python "geoprint" system that we developed
 a few years back at Action Without Borders.
 
