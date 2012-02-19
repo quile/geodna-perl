@@ -26,6 +26,11 @@ my $DECODE_MAP = {
     'c' => 3,
 };
 
+sub _mod {
+    my ( $x, $m ) = @_;
+    return fmod( fmod( $x, $m ) + $m, $m);
+}
+
 sub encode_geo_dna {
     my ( @args ) = @_;
     encode( @args );
@@ -138,8 +143,8 @@ sub add_vector {
     my ( $lat, $lon, $dy, $dx ) = @_;
 
     return (
-        fmod( ( $lat + 90.0 + $dy ), 180.0 ) - 90.0,
-        fmod( ( $lon + 180.0 + $dx ), 360.0 )  - 180.0
+        _mod( ( $lat + 90.0 + $dy ), 180.0 ) - 90.0,
+        _mod( ( $lon + 180.0 + $dx ), 360.0 )  - 180.0
     );
 }
 
