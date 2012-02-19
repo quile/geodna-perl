@@ -16,7 +16,7 @@ Geo::DNA - Encode latitude and longitude in a useful string format
 
 # VERSION
 
-    0.3.1
+    0.3.2
 
 
 
@@ -145,7 +145,7 @@ Please report bugs relevant to `GeoDNA` to <info[at]kyledawkins.com>.
 
 # CONTRIBUTING
 
-The github repository is at https://quile@github.com/quile/geodna-perl.git
+The github repository is at git://github.com/quile/geodna-perl.git.
 
 
 

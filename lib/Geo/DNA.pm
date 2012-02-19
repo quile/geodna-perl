@@ -331,7 +331,7 @@ Please report bugs relevant to C<GeoDNA> to E<lt>info[at]kyledawkins.comE<gt>.
 
 =head1 CONTRIBUTING
 
-The github repository is at https://quile@github.com/quile/geodna-perl.git
+The github repository is at git://github.com/quile/geodna-perl.git.
 
 
 =head1 SEE ALSO
