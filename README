@@ -13,7 +13,7 @@ SYNOPSIS
      -41.288889 | 174.777222
 
 VERSION
-        0.02
+        0.3.2
 
 FEATURES
     * Simple API
@@ -111,8 +111,7 @@ BUGS
     Please report bugs relevant to `GeoDNA' to <info[at]kyledawkins.com>.
 
 CONTRIBUTING
-    The github repository is at
-    https://quile@github.com/quile/geodna-perl.git
+    The github repository is at git://github.com/quile/geodna-perl.git.
 
 SEE ALSO
     Some other stuff.
