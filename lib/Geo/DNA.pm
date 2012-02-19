@@ -1,6 +1,6 @@
 package Geo::DNA;
 
-our $VERSION = "0.3";
+our $VERSION = "0.3.1";
 
 use common::sense;
 
@@ -91,7 +91,7 @@ sub decode {
     my ( $lati, $loni ) = bounding_box( $geodna );
 
     my $lat = ( $lati->[0] + $lati->[1] ) / 2;
-    my $lon = ( $loni->[0] + $loni->[0] ) / 2;
+    my $lon = ( $loni->[0] + $loni->[1] ) / 2;
     if ( $options->{radians} ) {
         return ( deg2rad( $lat ), deg2rad( $lon ) );
     }
@@ -189,7 +189,7 @@ Geo::DNA - Encode latitude and longitude in a useful string format
 
 =head1 VERSION
 
-    0.03
+    0.3.1
 
 
 =head1 FEATURES
