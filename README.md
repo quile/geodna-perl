@@ -16,7 +16,7 @@ Geo::DNA - Encode latitude and longitude in a useful string format
 
 # VERSION
 
-    0.3.2
+    0.3.3
 
 
 
