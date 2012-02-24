@@ -1,6 +1,6 @@
 package Geo::DNA;
 
-our $VERSION = "0.31";
+our $VERSION = "0.32";
 
 use common::sense;
 
@@ -194,7 +194,7 @@ Geo::DNA - Encode latitude and longitude in a useful string format
 
 =head1 VERSION
 
-    0.31
+    0.32
 
 
 =head1 FEATURES
