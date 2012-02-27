@@ -16,7 +16,7 @@ Geo::DNA - Encode latitude and longitude in a useful string format
 
 # VERSION
 
-    0.32
+    0.33
 
 
 
@@ -38,7 +38,7 @@ It's just basic space partitioning, really.
 # DESCRIPTION
 
 NEW: see an interactive demo of Geo::DNA codes at
-http://www.shoffle.com/geodna-js/docs/google-maps.html
+http://www.geodna.org/docs/google-maps.html
 
 This is a Perl version of the Python "geoprint" system that we developed
 a few years back at Action Without Borders.
@@ -109,6 +109,33 @@ can locate any items within any of those boxes.
 
 The precision (ie. string length) of the Geo::DNA codes will be the same
 as $code.
+
+
+
+### `neighbours_within_radius`
+
+    my $neighbours = neighbours_within_radius( code, radius, options );
+
+Returns a raw list of GeoDNA codes of a certain size contained within the
+radius (specified in kilometres) about the point represented by a
+code.
+
+The size of the returned codes will either be specified in options, or
+will be the default (12).
+
+- precision => N
+    If this is present, the returned GeoDNA codes will have this size.
+
+### `reduce`
+
+    my $neighbours = Geo::DNA::reduce( $neighbours )
+
+Given an array of GeoDNA codes of arbitrary size (eg. as returned by
+the "neighbours_within_radius" function), this will return the minimal set
+of GeoDNA codes (of any sizes) that exactly cover the same area.  This is
+important because it can massively reduce the number of comparisons you
+have to do in order to perform stem-matching, *and* more crucially, if
+you *don't* reduce the list, you *can't* perform stem matching.
 
 
 

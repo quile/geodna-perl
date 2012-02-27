@@ -1,6 +1,6 @@
 package Geo::DNA;
 
-our $VERSION = "0.32";
+our $VERSION = "0.33";
 
 use common::sense;
 
@@ -14,6 +14,7 @@ our @EXPORT_OK = qw(
     decode_geo_dna
     neighbours_geo_dna
     bounding_box_geo_dna
+    neighbours_within_radius
 );
 
 
@@ -140,11 +141,20 @@ sub bounding_box {
 }
 
 sub add_vector {
-    my ( $lat, $lon, $dy, $dx ) = @_;
-
+    my ( $geodna, $dy, $dx ) = @_;
+    my ( $lat, $lon ) = decode( $geodna );
     return (
         _mod( ( $lat + 90.0 + $dy ), 180.0 ) - 90.0,
         _mod( ( $lon + 180.0 + $dx ), 360.0 )  - 180.0
+    );
+}
+
+
+sub normalise {
+    my ( $lat, $lon ) = @_;
+    return (
+        _mod( ( $lat + 90.0 ), 180.0 ) - 90.0,
+        _mod( ( $lon + 180.0 ), 360.0 ) - 180.0,
     );
 }
 
@@ -160,7 +170,6 @@ sub neighbours {
     my ( $geodna ) = @_;
 
     # TODO:kd - this can be optimised
-    my ( $lat, $lon )   = decode( $geodna );
     my ( $lati, $loni ) = bounding_box( $geodna );
     my $width  = abs( $loni->[1] - $loni->[0] );
     my $height = abs( $lati->[1] - $lati->[0] );
@@ -169,12 +178,122 @@ sub neighbours {
     foreach my $y ( -1, 0, 1 ) {
         foreach my $x ( -1, 0, 1 ) {
             next unless ( $x || $y );
-            push (@$neighbours, encode( add_vector( $lat, $lon, $height * $y, $width * $x ) ) );
+            push (@$neighbours, encode( add_vector( $geodna, $height * $y, $width * $x ) ) );
         }
     }
     return $neighbours;
 }
 
+sub point_from_point_bearing_and_distance {
+    my ( $geodna, $bearing, $distance, @opts ) = @_;
+    my $options = { @opts };
+    my $distance = $distance * 1000; # make it metres instead of kilometres
+    my $precision = $options->{precision} || length( $geodna );
+    my ( $lat1, $lon1 ) = decode( $geodna, radians => 1 );
+
+    my $lat2 = asin( sin( $lat1 ) * cos( $distance / $RADIUS_OF_EARTH ) +
+                     cos( $lat1 ) * sin( $distance / $RADIUS_OF_EARTH ) * cos( $bearing ) );
+    my $lon2 = $lon1 + atan2( sin( $bearing ) * sin( $distance / $RADIUS_OF_EARTH ) * cos( $lat1 ),
+                      cos( $distance / $RADIUS_OF_EARTH ) - sin( $lat1 ) * sin( $lat2 ));
+    return encode( $lat2, $lon2, precision => $precision, radians => 1 );
+}
+
+sub distance_in_km {
+    my ( $ga, $gb ) = @_;
+    my ( $alat, $alon ) = decode( $ga );
+    my ( $blat, $blon ) = decode( $gb );
+
+    # if a[1] and b[1] have different signs, we need to translate
+    # everything a bit in order for the formulae to work.
+    if ( $alon * $blon < 0.0 && abs( $alon - $blon ) > 180.0 ) {
+        ( $alat, $alon ) = add_vector( $ga, 0.0, 180.0 );
+        ( $blat, $blon ) = add_vector( $gb, 0.0, 180.0 );
+    }
+    my $x = ( deg2rad( $blon ) - deg2rad( $alon ) ) * cos( ( deg2rad( $alat ) + deg2rad( $blat ) ) / 2 );
+    my $y = ( deg2rad( $blat ) - deg2rad( $alat ) );
+    my $d = sqrt( $x * $x + $y * $y ) * $RADIUS_OF_EARTH;
+    return $d / 1000;
+}
+
+# This is experimental!!
+# Totally unoptimised - use at your peril!
+sub neighbours_within_radius {
+    my ( $geodna, $radius, @opts) = @_;
+    my $options = { @opts };
+    $options->{precision} ||= 12;
+
+    my $neighbours = [];
+    my $rh = $radius * sqrt(2);
+
+    my $start = point_from_point_bearing_and_distance( $geodna, -( pi / 4 ), $rh, %$options );
+    my   $end = point_from_point_bearing_and_distance( $geodna, pi / 4, $rh, %$options );
+    my ( $blat, $blon ) = bounding_box( $start );
+    my ( $dummy, $slon ) = decode( $start );
+    my ( $dummy, $elon ) = decode( $end );
+    my $dheight = abs( $blat->[1] - $blat->[0] );
+    my $dwidth  = abs( $blon->[1] - $blon->[0] );
+    my ( $nlat, $nlon ) = normalise( 0.0, abs( $elon - $slon ) );
+    my $delta = abs( $nlon );
+    my $tlat = 0.0;
+    my $tlon = 0.0;
+    my $current = $start;
+
+    while ( $tlat <= $delta ) {
+        while ( $tlon <= $delta ) {
+            my ( $clat, $clon ) = add_vector( $current, 0.0, $dwidth );
+            $current = encode( $clat, $clon, %$options );
+            my $d = distance_in_km( $current, $geodna );
+            if ( $d <= $radius ) {
+                push @$neighbours, $current;
+            }
+            $tlon = $tlon + $dwidth;
+        }
+
+        $tlat = $tlat + $dheight;
+        my ( $rlat, $rlon ) = add_vector( $start, -$tlat , 0.0 );
+        $current = encode( $rlat, $rlon, %$options );
+        $tlon = 0.0;
+    }
+    return $neighbours;
+}
+
+# This takes an array of GeoDNA codes and reduces it to its
+# minimal set of codes covering the same area.
+# Needs a more optimal impl.
+sub reduce {
+    my ( $geodna_codes ) = @_;
+
+    # hash all the codes
+    my $codes = {};
+    foreach my $code (@$geodna_codes) {
+        $codes->{$code} = 1;
+    }
+
+    my $reduced = [];
+    my $code;
+    foreach my $code (@$geodna_codes) {
+        if ( $codes->{$code} ) {
+            my $parent = substr( $code, 0, length($code) - 1 );
+
+            if ( $codes->{ $parent . 'a' }
+              && $codes->{ $parent . 't' }
+              && $codes->{ $parent . 'g' }
+              && $codes->{ $parent . 'c' }) {
+                  delete $codes->{ $parent . 'a' };
+                  delete $codes->{ $parent . 't' };
+                  delete $codes->{ $parent . 'g' };
+                  delete $codes->{ $parent . 'c' };
+                  push @$reduced, $parent;
+            } else {
+                push @$reduced, $code;
+            }
+        }
+    }
+    if ( scalar @$geodna_codes == scalar @$reduced ) {
+        return $reduced;
+    }
+    return reduce( $reduced );
+}
 
 =head1 NAME
 
@@ -194,7 +313,7 @@ Geo::DNA - Encode latitude and longitude in a useful string format
 
 =head1 VERSION
 
-    0.32
+    0.33
 
 
 =head1 FEATURES
@@ -294,6 +413,36 @@ can locate any items within any of those boxes.
 
 The precision (ie. string length) of the Geo::DNA codes will be the same
 as $code.
+
+
+=head3 C<neighbours_within_radius>
+
+ my $neighbours = neighbours_within_radius( code, radius, options );
+
+Returns a raw list of GeoDNA codes of a certain size contained within the
+radius (specified in kilometres) about the point represented by a
+code.
+
+The size of the returned codes will either be specified in options, or
+will be the default (12).
+
+=over
+
+=item precision => N
+    If this is present, the returned GeoDNA codes will have this size.
+
+=back
+
+=head3 C<reduce>
+
+ my $neighbours = Geo::DNA::reduce( $neighbours )
+
+Given an array of GeoDNA codes of arbitrary size (eg. as returned by
+the "neighbours_within_radius" function), this will return the minimal set
+of GeoDNA codes (of any sizes) that exactly cover the same area.  This is
+important because it can massively reduce the number of comparisons you
+have to do in order to perform stem-matching, *and* more crucially, if
+you *don't* reduce the list, you *can't* perform stem matching.
 
 
 =head3 C<bounding_box_geo_dna>
